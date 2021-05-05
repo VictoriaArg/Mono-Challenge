@@ -1,0 +1,195 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./styles.css">
+    <title>Transactions Web</title>
+    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+</head>
+<body>
+    <div x-data="start()" class="relative bg-gray-100 flex items-center flex-col min-h-screen max-w-screen inset-0">
+
+     <!-- Top Nav -->   
+    <div class="place-self-start flex flex-row w-full max-w-screen h-14 items-center justify-between shadow-md bg-gradient-to-r from-purple-400 via-purple-500 to-indigo-900">
+        <div x-show="!checkUser()" class="flex flex-row">
+        <span class="text-white font-medium ml-8 mr-2 text-lg"><p>Hola</p></span>
+        <p x-text="sayMyName()" class="text-white font-medium text-lg"></p>
+    </div>
+        <div x-on:click="logout" x-show="!checkUser()" class="text-white mr-8"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg></div>
+    </div>
+
+    <!-- Balance -->
+    <div class="flex flex-col bg-white shadow-md my-8 w-2/6 h-auto rounded-xl p-8">
+        <div class="flex flex-col items-start">
+            <p class="text-2xl pb-6">Tu saldo actual</p>
+            <div class="flex flex-row items-center pb-8">
+                <p class="text-2xl">$</p>
+                <p x-text="(Math.round(balance * 100) / 100).toFixed(2)" class="text-4xl"></p>
+            </div>
+            <button x-show="!isZero()" x-on:click="newTransactionModal" class=" px-4 w-auto h-10 bg-purple-400 rounded-full text-white font-medium focus:border-transparent hover:shadow-md"><h5>Nueva Transacción</h5></button>
+            <button x-show="isZero()" x-on:click="newTransactionModal" class=" px-4 w-auto h-10 bg-purple-400 rounded-full text-white font-medium focus:border-transparent hover:shadow-md"><h5>Recargar mi Mono</h5></button>
+        </div>
+    </div>
+
+    <!-- New Transaction Modal -->
+    <div x-show="openTransactionModal()" class="bg-opacity-75 bg-gray-400 absolute min-h-full inset-0 flex justify-center" id="overlay">
+        <div style="height: 550px;" class="bg-white flex flex-col w-2/6 m-12 p-12 rounded-l-lg rounded-b-lg rounded-r-lg rounded-t-lg shadow-md">
+            <p class="text-2xl pb-8">Realizar nueva transacción</p>
+            <p class="text-1xl pb-6">Seleccione el tipo de transacción:</p>
+            <div class="flex flex-row items-center">
+            <input type='radio' name="transaction-type" value="adition" checked="checked"><label for="adition" class="m-2">Depósito</label>
+            </div>
+            <div class="flex flex-row items-center">
+            <input type='radio' name="transaction-type" value="subtraction"><label for="substraction" class="m-2">Transferencia</label>
+            </div>
+            <label for="amount" class="font-sans text-sm py-2">¿Cuál será el monto?</label>
+            <input autocomplete="off" id="amount" type="number" name="amount" placeholder="$" class="bg-gray-200 rounded-l-md rounded-b-md rounded-r-md rounded-t-md p-2 focus:border-purple-400 border-2">
+            <label for="commerce" class="font-sans text-sm py-2">Escriba una descripción:</label>
+            <input autocomplete="off" id="commerce" type="text" name="commerce" placeholder="Escribe el alias aquí" class="bg-gray-200 rounded-l-md rounded-b-md rounded-r-md rounded-t-md p-2 focus:border-purple-400 border-2">
+            <button x-on:click="commitTransaction" class="p-2 mt-10 w-3/6 bg-purple-400 rounded-full text-white font-medium focus:border-transparent hover:shadow-md">Confirmar Transacción</button>
+        </div>
+    </div>
+    <!-- Transaction History -->
+    <div class="flex flex-col bg-white shadow-md mb-8 w-2/6 h-auto rounded-xl p-8">
+        <p class="text-1xl pb-6">Tus transacciones</p>
+        <div x-show="noTransactions()" class="flex flex-col justify-center">
+            <p class="text-2xl pb-6 text-center">Todavía no has hecho transacciones</p>
+            <p class="text-1xl pb-6 text-center">Acá encontrará un listado de las transacciones que realices. Desde recargas hasta transacciones con tu tarjeta.</p>
+        </div>
+        <div x-show="!noTransactions()">
+            <div x-show="allTransactions">
+                <div class="border-t border-b border-indigo-400 flex flex-row py-2">
+                    <div class="w-1/6"><p class="text-indigo-400 text-lg">Fecha</p></div>
+                    <div class="w-3/6"><p class="text-indigo-400 text-lg">Descripción</p></div>
+                    <div><p class="text-indigo-400 text-lg">Monto</p></div>
+                </div>
+                <template x-for="transaccion in transactions" :key="transaccion">
+                    <div class="border-b border-indigo-400 flex flex-row py-2">
+                        <div class="w-1/6"><p x-text="transaccion.date + ' ' " class="text-lg"></p></div>
+                        <div class="w-3/6"><p x-text="transaccion.commerce + ' '" class="text-lg"></p></div>
+                        <div class="flex flex-row">
+                            <p x-text="transaccion.type === 'adition' ? '+' : '-' " class="text-lg"></p>
+                            <p x-text="transaccion.amount" class="text-lg"></p>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            <div x-show="!allTransactions"><!-- Aca van las ultimas transacciones -->
+                <div class="border-t border-b border-indigo-400 flex flex-row py-2">
+                    <div class="w-1/6"><p class="text-indigo-400 text-lg">Fecha</p></div>
+                    <div class="w-3/6"><p class="text-indigo-400 text-lg">Descripción</p></div>
+                    <div><p class="text-indigo-400 text-lg">Monto</p></div>
+                </div>
+                <template x-for="transaccion in lastTransactions" :key="transaccion">
+                    <div class="border-b border-indigo-400 flex flex-row py-2">
+                        <div class="w-1/6"><p x-text="transaccion.date + ' ' " class="text-lg"></p></div>
+                        <div class="w-3/6"><p x-text="transaccion.commerce + ' '" class="text-lg"></p></div>
+                        <div class="flex flex-row">
+                            <p x-text="transaccion.type === 'adition' ? '+' : '-' " class="text-lg"></p>
+                            <p x-text="transaccion.amount" class="text-lg"></p>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            <button x-on:click="seeAllTransactions" class="p-2 mt-10 w-2/6 bg-purple-400 rounded-full text-white font-medium focus:border-transparent hover:shadow-md">Ver todas</button>
+        </div>
+    </div>
+
+    <!-- Fake Login Modal-->
+    <div x-show="checkUser()" class="bg-opacity-75 bg-gray-400 absolute inset-0 flex justify-center items-center" id="overlay">
+        <div class="bg-white flex justify-center flex-col w-2/6 h-4/5 p-24 rounded-l-lg rounded-b-lg rounded-r-lg rounded-t-lg shadow-md">
+            <p class="text-6xl p-2 font-sans">¡Hola!</p>
+            <p class="text-4xl p-2 font-sans">Bienvenido a</p>
+            <img src="./assets/logo.png" alt="Mono logo" class="w-4/5 h-auto pb-8">
+            <label for="name" class="font-sans text-sm pb-2">¿Cómo es tu nombre?</label>
+            <input id="newUser" type="text" name="name" placeholder="Escribe tu nombre aquí" class="bg-gray-200 rounded-l-md rounded-b-md rounded-r-md rounded-t-md p-2 focus:border-purple-400 border-2">
+            <button x-on:click="login" class="p-2 mt-10 w-2/6 bg-purple-400 rounded-full text-white font-medium focus:border-transparent hover:shadow-md">Empezar</button>
+        </div>
+    </div>
+</div>
+    <script>
+
+        function start() {
+            return {
+                user: null,
+                id: null,
+                balance: 0,
+                transactions: [],
+                lastTransactions: [],
+                newTransaction: false,
+                allTransactions: false,
+                login() { 
+                    if (document.getElementById("newUser").value.length > 0) { 
+                        this.user = document.getElementById("newUser").value
+                        this.id = Math.floor(Math.random() * 100)    
+                        } else {alert("Para poder empezar debes completar tu nombre.")}},
+                logout() { this.user = null
+                            this.id = null
+                            this.balance = 0
+                            this.transactions = []
+                            this.lastTransactions = []
+                         },
+                checkUser() { return this.user === null},
+                sayMyName() { if (this.user === null){
+                    console.log("Todavía no iniciaste sesión.")
+                } else return this.user },
+                isZero() { return this.balance === 0 },
+                noTransactions() {return this.transactions.length === 0},
+                newTransactionModal() {this.newTransaction = true},
+                openTransactionModal() {return this.newTransaction},
+                commitTransaction(e) {
+                    e.preventDefault()
+                    let transactionOptions = document.getElementsByName('transaction-type');
+                    let transactionType; //sabemos que tipo de transacción es
+                    for(var i = 0; i < transactionOptions.length; i++){
+                       if (transactionOptions[i].checked) {
+                        transactionType = transactionOptions[i].value;
+                        }
+                    }
+
+                    //sabemos los demás parámetros
+                    let amount = document.getElementById("amount").value
+                    let commerce = document.getElementById("commerce").value
+                    let today = new Date()
+
+                    //hacemos una mínima validación
+                    let correctAmount = () => { if (transactionType === "subtraction") { 
+                                                        return amount > 0 && amount < this.balance 
+                                                    } else { return amount > 0 }}
+                    let correctCommerce = () => { return commerce.length > 0;}
+                    
+                    //si esta todo ok creamos el objeto con los datos de la nueva transacción
+                     if (correctAmount() && correctCommerce()) {
+                        let transaction = {
+                        id: Math.floor(Math.random() * 1000),
+                        commerce: commerce,
+                        type: transactionType,
+                        amount: amount,
+                        date:  today.getDay() + "/" + today.getMonth()
+                            }
+
+                        //agregamos la nueva transacción al array de todas las transacciones
+                        //las mas nuevas al principio
+                        this.transactions.unshift(transaction);
+                        //actualizamos el array de las transacciones más nuevas
+                        this.lastTransactions = this.transactions.slice(0, 3)
+                        //actualizamos el balance
+                        if (transactionType === "subtraction") {
+                            this.balance -= Number(amount)
+                        } else { this.balance += Number(amount)}
+                        this.newTransaction = false;
+                    } else {
+                        alert("Por favor asegurate de completar correctamente los campos")
+                    } 
+                },
+                seeAllTransactions(){  
+                    this.allTransactions = !this.allTransactions
+                    return this.allTransactions }
+                }
+        }
+    </script>
+</body>
+</html>

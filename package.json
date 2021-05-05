@@ -1,0 +1,21 @@
+{
+  "name": "mono-transactions",
+  "version": "1.0.0",
+  "description": "challenge for front end developer position",
+  "main": "index.html",
+  "scripts": {
+    "build-css": "tailwindcss build src/styles.css -o public/styles.css"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@tailwindcss/forms": "^0.3.2",
+    "alpinejs": "^2.8.2"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.2.5",
+    "postcss": "^8.2.13",
+    "stylelint-config-recommended": "^5.0.0",
+    "tailwindcss": "^2.1.2"
+  }
+}
